@@ -1,0 +1,5 @@
+node_modules/
+.seen.json
+*.log
+.env
+data/
