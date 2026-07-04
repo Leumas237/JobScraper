@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Webscraper temps reel qui trouve des offres d'emploi adaptees a un CV",
   "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
   "bin": {
     "job-cv-scraper": "./index.js"
   },

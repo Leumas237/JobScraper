@@ -1,0 +1,21 @@
+# Genere pour `fly launch` / `fly deploy`.
+# Renommez `app` si le nom est deja pris (les noms Fly.io sont globalement uniques).
+app = "jobscraper-bot"
+primary_region = "cdg"
+
+[build]
+
+[env]
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256

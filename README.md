@@ -108,28 +108,31 @@ Les CV, mots-cles et offres deja vues sont stockes par conversation dans
 
 ### 4. Deployer gratuitement (pour tourner 24/7 sans PC)
 
-Le projet inclut un `Dockerfile` et un mini serveur HTTP de health-check
-(`bot.js` ecoute sur `PORT`), compatible avec la plupart des hebergeurs
-gratuits. Dans tous les cas, **le token n'est jamais dans le repo** : chaque
-personne qui deploie doit le renseigner elle-meme dans les variables
-d'environnement de son hebergeur.
+Le projet est **cle en main** : `Dockerfile`, `render.yaml`, `railway.json`
+et `fly.toml` sont deja configures, et `bot.js` expose un mini serveur HTTP de
+health-check sur `PORT` pour les plateformes qui l'exigent. Dans tous les cas,
+**le token n'est jamais dans le repo** : chaque personne qui deploie le
+renseigne elle-meme dans les variables d'environnement de son hebergeur.
 
-**Railway** (recommande, tourne en continu meme sans trafic HTTP) :
-1. Creez un projet sur [railway.app](https://railway.app), reliez ce repo GitHub.
-2. Ajoutez la variable d'environnement `TELEGRAM_BOT_TOKEN` avec votre propre token.
-3. Railway detecte le `Dockerfile` a la racine et deploie automatiquement.
+**Render** (le plus simple, 1 clic via le blueprint `render.yaml`) :
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Leumas237/JobScraper)
+
+1. Cliquez sur le bouton ci-dessus (ou New > Blueprint sur [render.com](https://render.com), reliez ce repo).
+2. Render lit `render.yaml` et demande votre `TELEGRAM_BOT_TOKEN` a la creation.
+3. Deploiement automatique. Note : le plan gratuit met le service en veille
+   apres 15 min d'inactivite HTTP ; utilisez un pingeur (ex. UptimeRobot) sur
+   l'URL publique pour un suivi vraiment continu.
+
+**Railway** (tourne en continu meme sans trafic HTTP, pas de mise en veille) :
+1. Creez un projet sur [railway.app](https://railway.app) > "Deploy from GitHub repo", choisissez ce repo.
+2. Railway lit `railway.json` et le `Dockerfile` automatiquement.
+3. Dans Variables, ajoutez `TELEGRAM_BOT_TOKEN` avec votre propre token.
 
 **Fly.io** :
-1. `fly launch` depuis la racine du projet (choisir "no" pour la base de donnees).
+1. Depuis la racine du projet : `fly launch --copy-config --yes` (reutilise `fly.toml`, renommez `app` si le nom est deja pris).
 2. `fly secrets set TELEGRAM_BOT_TOKEN=votre_token`
 3. `fly deploy`
-
-**Render** (Web Service gratuit) :
-1. New Web Service, reliez ce repo, "Docker" comme environnement.
-2. Ajoutez la variable d'environnement `TELEGRAM_BOT_TOKEN` avec votre propre token.
-3. Note : le plan gratuit de Render met le service en veille apres 15 min
-   d'inactivite HTTP ; utilisez un service de ping (ex. UptimeRobot) sur
-   l'URL publique si vous voulez un suivi vraiment continu.
 
 ## Ajouter une nouvelle source
 

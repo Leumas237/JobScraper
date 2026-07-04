@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: jobscraper-bot
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: PORT
+        value: 3000
