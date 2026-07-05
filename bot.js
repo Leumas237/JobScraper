@@ -11,6 +11,9 @@ const { extractCvText, extractKeywords } = require('./src/cvParser');
 const { matchJobs } = require('./src/matcher');
 const { SeenStore } = require('./src/store');
 const { SubscriptionStore } = require('./src/subscriptions');
+const { scoreAts } = require('./src/cvOptimizer');
+const { compareToJobOffer } = require('./src/jobMatch');
+const { getAiSuggestions, isEnabled: aiEnabled } = require('./src/aiSuggestions');
 const arbeitnow = require('./src/sources/arbeitnow');
 const weworkremotely = require('./src/sources/weworkremotely');
 
@@ -99,7 +102,10 @@ bot.onText(/^\/start$/, (msg) => {
       '/jobs - chercher maintenant\n' +
       '/watch [minutes] - suivi automatique (defaut 15 min)\n' +
       '/stop - arreter le suivi\n' +
-      "/status - voir l'etat actuel",
+      "/status - voir l'etat actuel\n" +
+      '/score - score ATS de votre CV\n' +
+      "/compare - comparer votre CV a une offre d'emploi\n" +
+      '/optimize - suggestions IA pour ameliorer votre CV',
   );
 });
 
@@ -149,6 +155,75 @@ bot.onText(/^\/stop$/, (msg) => {
   bot.sendMessage(chatId, 'Suivi automatique arrete.');
 });
 
+bot.onText(/^\/score$/, async (msg) => {
+  const chatId = msg.chat.id;
+  const sub = subs.get(chatId);
+  if (!sub || !sub.cvText) {
+    bot.sendMessage(chatId, "Envoyez-moi d'abord votre CV (.pdf ou .txt).");
+    return;
+  }
+  const report = scoreAts(sub.cvText);
+  const lines = report.checks.map((c) => `${c.passed ? '✅' : '❌'} ${c.label}`);
+  await bot.sendMessage(
+    chatId,
+    `Score ATS : *${report.score}/100* (${report.wordCount} mots)\n\n${lines.join('\n')}`,
+    { parse_mode: 'Markdown' },
+  );
+});
+
+bot.onText(/^\/compare$/, (msg) => {
+  const chatId = msg.chat.id;
+  const sub = subs.get(chatId);
+  if (!sub || !sub.cvText) {
+    bot.sendMessage(chatId, "Envoyez-moi d'abord votre CV (.pdf ou .txt).");
+    return;
+  }
+  subs.update(chatId, { awaitingJobText: true });
+  bot.sendMessage(chatId, "Collez le texte de l'offre d'emploi dans votre prochain message.");
+});
+
+bot.onText(/^\/optimize$/, async (msg) => {
+  const chatId = msg.chat.id;
+  const sub = subs.get(chatId);
+  if (!sub || !sub.cvText) {
+    bot.sendMessage(chatId, "Envoyez-moi d'abord votre CV (.pdf ou .txt).");
+    return;
+  }
+  if (!aiEnabled()) {
+    bot.sendMessage(chatId, 'Les suggestions IA ne sont pas activees sur ce bot (ANTHROPIC_API_KEY manquant).');
+    return;
+  }
+  await bot.sendMessage(chatId, 'Generation des suggestions IA en cours...');
+  try {
+    const comparison = sub.lastJobText ? compareToJobOffer(sub.cvText, sub.lastJobText) : null;
+    const suggestions = await getAiSuggestions({
+      cvText: sub.cvText,
+      jobText: sub.lastJobText || null,
+      missingKeywords: comparison ? comparison.missing : [],
+    });
+    await bot.sendMessage(chatId, suggestions || 'Aucune suggestion generee.');
+  } catch (err) {
+    console.error('[erreur IA]', err.message);
+    await bot.sendMessage(chatId, 'Erreur lors de la generation des suggestions IA.');
+  }
+});
+
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+  if (!msg.text || msg.text.startsWith('/')) return;
+  const sub = subs.get(chatId);
+  if (!sub || !sub.awaitingJobText) return;
+
+  subs.update(chatId, { awaitingJobText: false, lastJobText: msg.text });
+  const comparison = compareToJobOffer(sub.cvText, msg.text);
+  const lines = [
+    `Correspondance avec l'offre : *${comparison.matchPercent}%*`,
+    `Mots-cles presents : ${comparison.matched.slice(0, 15).join(', ') || 'aucun'}`,
+    `Mots-cles manquants : ${comparison.missing.slice(0, 15).join(', ') || 'aucun'}`,
+  ];
+  await bot.sendMessage(chatId, lines.join('\n\n'), { parse_mode: 'Markdown' });
+});
+
 bot.on('document', async (msg) => {
   const chatId = msg.chat.id;
   const doc = msg.document;
@@ -168,7 +243,7 @@ bot.on('document', async (msg) => {
 
     const text = await extractCvText(cvPath);
     const keywords = extractKeywords(text);
-    subs.update(chatId, { keywords });
+    subs.update(chatId, { keywords, cvText: text });
 
     await bot.sendMessage(chatId, `CV analyse : ${keywords.length} mots-cles detectes.\n${keywords.slice(0, 20).join(', ')}`);
 

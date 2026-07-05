@@ -46,12 +46,41 @@ node index.js --cv ./cv.pdf --interval 15 --top 10
 | `--min-score` | Score minimum pour qu'une offre soit retenue        | 1      |
 | `--once`      | Ne fait qu'une seule verification puis s'arrete    | false  |
 
+## CV / LinkedIn optimizer
+
+En complement de la recherche d'offres, `optimize.js` analyse et ameliore le CV :
+
+1. **Score ATS** (heuristique, sans IA) : email/telephone presents, sections
+   standards (experience/formation/competences), resultats chiffres, verbes
+   d'action, longueur raisonnable.
+2. **Comparaison a une offre precise** : mots-cles de l'offre presents/absents
+   dans le CV, pourcentage de correspondance.
+3. **Suggestions IA** (optionnel, via l'API Claude) : resume professionnel,
+   reformulations de points d'experience, recommandations concretes.
+
+```bash
+node optimize.js --cv ./cv.pdf
+node optimize.js --cv ./cv.pdf --job ./offre.txt
+node optimize.js --cv ./cv.pdf --job ./offre.txt --no-ai   # sans suggestions IA
+```
+
+Les suggestions IA necessitent une cle `ANTHROPIC_API_KEY` (voir `.env.example`).
+Sans cette cle, le score ATS et la comparaison a une offre restent pleinement
+fonctionnels — seule la partie IA est desactivee.
+
+Dans le bot Telegram : `/score`, `/compare` (collez le texte de l'offre au
+message suivant) et `/optimize` (suggestions IA).
+
 ## Structure
 
 ```
 index.js                       CLI: orchestration + boucle temps reel
+optimize.js                     CLI: score ATS + comparaison offre + suggestions IA
 bot.js                          Bot Telegram
 src/cvParser.js                 Extraction de texte + mots-cles depuis le CV
+src/cvOptimizer.js               Score ATS (heuristique)
+src/jobMatch.js                  Comparaison CV / offre d'emploi
+src/aiSuggestions.js             Suggestions IA via l'API Claude (optionnel)
 src/matcher.js                  Scoring des offres par rapport aux mots-cles
 src/store.js                    Persistance des offres deja vues
 src/subscriptions.js             Etat des abonnements Telegram par conversation
@@ -102,6 +131,9 @@ Commandes disponibles :
 | `/jobs`         | Chercher des offres maintenant                             |
 | `/watch [min]`  | Activer le suivi automatique (defaut 15 min, min 5 min)    |
 | `/stop`         | Arreter le suivi automatique                                |
+| `/score`        | Score ATS du CV (structure, mots-cles, verbes d'action...) |
+| `/compare`      | Comparer le CV a une offre (collez le texte au message suivant) |
+| `/optimize`     | Suggestions IA pour ameliorer le CV (necessite `ANTHROPIC_API_KEY`) |
 
 Les CV, mots-cles et offres deja vues sont stockes par conversation dans
 `data/` (ignore par git, car il peut contenir des donnees personnelles).
