@@ -55,7 +55,7 @@ En complement de la recherche d'offres, `optimize.js` analyse et ameliore le CV 
    d'action, longueur raisonnable.
 2. **Comparaison a une offre precise** : mots-cles de l'offre presents/absents
    dans le CV, pourcentage de correspondance.
-3. **Suggestions IA** (optionnel, via l'API Claude) : resume professionnel,
+3. **Suggestions IA** (optionnel, via l'API DeepSeek) : resume professionnel,
    reformulations de points d'experience, recommandations concretes.
 
 ```bash
@@ -64,9 +64,10 @@ node optimize.js --cv ./cv.pdf --job ./offre.txt
 node optimize.js --cv ./cv.pdf --job ./offre.txt --no-ai   # sans suggestions IA
 ```
 
-Les suggestions IA necessitent une cle `ANTHROPIC_API_KEY` (voir `.env.example`).
-Sans cette cle, le score ATS et la comparaison a une offre restent pleinement
-fonctionnels — seule la partie IA est desactivee.
+Les suggestions IA necessitent une cle `DEEPSEEK_API_KEY` (gratuite sur
+[platform.deepseek.com](https://platform.deepseek.com/api_keys) — voir
+`.env.example`). Sans cette cle, le score ATS et la comparaison a une offre
+restent pleinement fonctionnels — seule la partie IA est desactivee.
 
 Dans le bot Telegram : `/score`, `/compare` (collez le texte de l'offre au
 message suivant) et `/optimize` (suggestions IA).
@@ -80,7 +81,7 @@ bot.js                          Bot Telegram
 src/cvParser.js                 Extraction de texte + mots-cles depuis le CV
 src/cvOptimizer.js               Score ATS (heuristique)
 src/jobMatch.js                  Comparaison CV / offre d'emploi
-src/aiSuggestions.js             Suggestions IA via l'API Claude (optionnel)
+src/aiSuggestions.js             Suggestions IA via l'API DeepSeek (optionnel)
 src/matcher.js                  Scoring des offres par rapport aux mots-cles
 src/store.js                    Persistance des offres deja vues
 src/subscriptions.js             Etat des abonnements Telegram par conversation
@@ -133,7 +134,7 @@ Commandes disponibles :
 | `/stop`         | Arreter le suivi automatique                                |
 | `/score`        | Score ATS du CV (structure, mots-cles, verbes d'action...) |
 | `/compare`      | Comparer le CV a une offre (collez le texte au message suivant) |
-| `/optimize`     | Suggestions IA pour ameliorer le CV (necessite `ANTHROPIC_API_KEY`) |
+| `/optimize`     | Suggestions IA pour ameliorer le CV (necessite `DEEPSEEK_API_KEY`) |
 
 Les CV, mots-cles et offres deja vues sont stockes par conversation dans
 `data/` (ignore par git, car il peut contenir des donnees personnelles).

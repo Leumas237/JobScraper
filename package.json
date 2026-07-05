@@ -16,7 +16,6 @@
     "optimize": "node optimize.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.110.0",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
     "node-telegram-bot-api": "^1.1.2",

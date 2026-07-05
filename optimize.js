@@ -51,7 +51,7 @@ async function main() {
 
   if (!args.noAi) {
     if (!isEnabled()) {
-      console.log('\n(Suggestions IA desactivees : definissez ANTHROPIC_API_KEY pour les activer.)');
+      console.log('\n(Suggestions IA desactivees : definissez DEEPSEEK_API_KEY pour les activer.)');
     } else {
       console.log('\nGeneration des suggestions IA...\n');
       const suggestions = await getAiSuggestions({

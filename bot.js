@@ -190,7 +190,7 @@ bot.onText(/^\/optimize$/, async (msg) => {
     return;
   }
   if (!aiEnabled()) {
-    bot.sendMessage(chatId, 'Les suggestions IA ne sont pas activees sur ce bot (ANTHROPIC_API_KEY manquant).');
+    bot.sendMessage(chatId, 'Les suggestions IA ne sont pas activees sur ce bot (DEEPSEEK_API_KEY manquant).');
     return;
   }
   await bot.sendMessage(chatId, 'Generation des suggestions IA en cours...');
